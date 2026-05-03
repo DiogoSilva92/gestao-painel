@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestão — Painel Administrativo</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --azul:#1F4F6E;--azul2:#163A52;--gold:#9A7B1E;
+  --success:#1E8449;--danger:#C0392B;--warn:#E67E22;
+  --border:#E0DED6;--surface:#F2F4F6;--surface2:#E8E6E0;
+  --text:#1A1E22;--text2:#6B6A65;--text3:#A8A49E;
+  --radius:10px;--shadow:0 4px 20px rgba(0,0,0,.1)
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--surface);color:var(--text);min-height:100vh}
+.topbar{background:linear-gradient(135deg,var(--azul2),var(--azul));padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.topbar-logo{font-size:18px;font-weight:700;color:#fff;letter-spacing:.04em}
+.topbar-logo span{color:#F0C040}
+.topbar-user{font-size:13px;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:12px}
+.btn-logout{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;transition:all .15s}
+.btn-logout:hover{background:rgba(255,255,255,.25)}
+.container{max-width:1100px;margin:0 auto;padding:32px 24px}
+/* Login */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0e2a3a,var(--azul))}
+.login-card{background:#fff;border-radius:16px;padding:40px 36px;width:100%;max-width:420px;box-shadow:0 24px 64px rgba(0,0,0,.25)}
+.login-logo{text-align:center;font-size:26px;font-weight:700;color:var(--azul);margin-bottom:6px}
+.login-logo span{color:var(--gold)}
+.login-sub{text-align:center;font-size:13px;color:var(--text2);margin-bottom:28px}
+.field{margin-bottom:16px}
+.field label{font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+.field input{width:100%;padding:11px 13px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;color:var(--text);transition:border-color .15s}
+.field input:focus{outline:none;border-color:var(--azul)}
+.btn-primary{width:100%;padding:12px;background:var(--azul);color:#fff;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-primary:hover{background:var(--azul2)}
+.btn-primary:disabled{background:#C8C6BC;cursor:not-allowed}
+.err{background:#FADBD8;border-left:4px solid var(--danger);border-radius:6px;padding:10px 14px;font-size:12px;color:#7B241C;margin-bottom:12px;display:none}
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:28px}
+.stat-card{background:#fff;border-radius:var(--radius);padding:20px;border:1px solid var(--border);display:flex;align-items:center;gap:16px}
+.stat-icon{font-size:28px;width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+.stat-icon.azul{background:#D0E4F0}
+.stat-icon.gold{background:#F5EDD4}
+.stat-icon.green{background:#D5F5E3}
+.stat-icon.red{background:#FADBD8}
+.stat-val{font-size:26px;font-weight:700;color:var(--text);line-height:1}
+.stat-lbl{font-size:12px;color:var(--text2);margin-top:3px}
+/* Card */
+.card{background:#fff;border-radius:var(--radius);border:1px solid var(--border);padding:24px;margin-bottom:20px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.card-title{font-size:16px;font-weight:700;color:var(--azul)}
+/* Botões */
+.btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .15s}
+.btn:active{transform:scale(.97)}
+.btn-success{background:var(--success);color:#fff}.btn-success:hover{background:#196f3d}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{background:#a93226}
+.btn-warn{background:var(--warn);color:#fff}.btn-warn:hover{background:#ca6f1e}
+.btn-sec{background:var(--surface2);color:var(--text)}.btn-sec:hover{background:var(--border)}
+.btn-azul{background:var(--azul);color:#fff}.btn-azul:hover{background:var(--azul2)}
+.btn-sm{padding:5px 11px;font-size:12px}
+/* Tabela */
+.table{width:100%;border-collapse:collapse}
+.table th{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;padding:10px 12px;border-bottom:2px solid var(--border);text-align:left}
+.table td{padding:12px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+.table tr:last-child td{border-bottom:none}
+.table tr:hover td{background:var(--surface)}
+/* Badge */
+.badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;display:inline-block}
+.badge-green{background:#D5F5E3;color:#1E8449}
+.badge-red{background:#FADBD8;color:#922B21}
+.badge-warn{background:#FFF3CD;color:#856404}
+.badge-gray{background:var(--surface2);color:var(--text2)}
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:14px;padding:28px;width:100%;max-width:500px;box-shadow:var(--shadow)}
+.modal-title{font-size:18px;font-weight:700;color:var(--azul);margin-bottom:4px}
+.modal-sub{font-size:13px;color:var(--text2);margin-bottom:20px}
+.modal-btns{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* Chave */
+.key-box{background:var(--surface);border:2px dashed var(--border);border-radius:10px;padding:16px;text-align:center;margin:12px 0}
+.key-val{font-size:22px;font-weight:700;letter-spacing:.12em;color:var(--azul);font-family:'Courier New',monospace}
+.key-sub{font-size:12px;color:var(--text2);margin-top:6px}
+/* Nota */
+.note{background:#F5EDD4;border-left:4px solid var(--gold);border-radius:6px;padding:10px 14px;font-size:12px;color:#633806;margin-bottom:14px;line-height:1.6}
+.warn-box{background:#FADBD8;border-left:4px solid var(--danger);border-radius:6px;padding:10px 14px;font-size:12px;color:#7B241C;margin-bottom:14px;line-height:1.6}
+/* Loading */
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.7);z-index:200;display:none;align-items:center;justify-content:center}
+.loading-overlay.on{display:flex}
+.spinner{width:40px;height:40px;border:4px solid var(--border);border-top-color:var(--azul);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--azul);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:300;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.err{background:var(--danger)}
+/* Responsivo */
+@media(max-width:600px){.fr{grid-template-columns:1fr}.container{padding:16px}.topbar{padding:0 16px}}
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loading"><div class="spinner"></div></div>
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">gestão<span>.</span></div>
+    <div class="login-sub">Painel administrativo — acesso restrito</div>
+    <div class="err" id="login-err">E-mail ou senha incorretos.</div>
+    <div class="field"><label>E-mail</label>
+      <input type="email" id="login-email" placeholder="seuemail@gmail.com" value="diogodhs92@gmail.com">
+    </div>
+    <div class="field"><label>Senha</label>
+      <input type="password" id="login-pwd" placeholder="Sua senha Google" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn-primary" onclick="doLogin()" id="btn-login">Entrar</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+  <div class="topbar">
+    <div class="topbar-logo">gestão<span>.</span></div>
+    <div class="topbar-user">
+      <span id="topbar-email"></span>
+      <button class="btn-logout" onclick="doLogout()">Sair</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Stats -->
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card"><div class="stat-icon azul">🏢</div><div><div class="stat-val" id="s-total">—</div><div class="stat-lbl">Clientes cadastrados</div></div></div>
+      <div class="stat-card"><div class="stat-icon green">✅</div><div><div class="stat-val" id="s-ativos">—</div><div class="stat-lbl">Licenças ativas</div></div></div>
+      <div class="stat-card"><div class="stat-icon gold">⚠️</div><div><div class="stat-val" id="s-vencendo">—</div><div class="stat-lbl">Vencendo em 7 dias</div></div></div>
+      <div class="stat-card"><div class="stat-icon red">❌</div><div><div class="stat-val" id="s-expirados">—</div><div class="stat-lbl">Expirados / Bloqueados</div></div></div>
+    </div>
+
+    <!-- Clientes -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Clientes</div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="search-cli" placeholder="Buscar cliente..." oninput="renderClientes()"
+            style="font-size:13px;padding:7px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;width:220px">
+          <button class="btn btn-azul" onclick="openNovoCliente()">+ Novo cliente</button>
+        </div>
+      </div>
+      <table class="table" id="tabela-clientes">
+        <thead>
+          <tr>
+            <th>Empresa</th>
+            <th>CNPJ</th>
+            <th>Contato</th>
+            <th>Chave</th>
+            <th>Validade</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-clientes">
+          <tr><td colspan="7" style="text-align:center;color:var(--text3);padding:32px">Carregando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Novo Cliente -->
+<div class="overlay" id="modal-novo">
+  <div class="modal">
+    <div class="modal-title" id="modal-novo-title">Novo cliente</div>
+    <div class="modal-sub">Preencha os dados para gerar a chave de licença.</div>
+    <input type="hidden" id="edit-chave">
+    <div class="field"><label>Nome da empresa *</label>
+      <input type="text" id="novo-empresa" placeholder="Ex: Escritório ABC Ltda">
+    </div>
+    <div class="fr">
+      <div class="field"><label>CNPJ *</label>
+        <input type="text" id="novo-cnpj" placeholder="00.000.000/0001-00" oninput="maskCNPJ(this)">
+      </div>
+      <div class="field"><label>Telefone / WhatsApp</label>
+        <input type="text" id="novo-tel" placeholder="(81) 9 9999-9999">
+      </div>
+    </div>
+    <div class="field"><label>Responsável (contato)</label>
+      <input type="text" id="novo-contato" placeholder="Nome do responsável">
+    </div>
+    <div class="field"><label>E-mail</label>
+      <input type="email" id="novo-email" placeholder="contato@empresa.com">
+    </div>
+    <div class="field"><label>Validade da licença *</label>
+      <input type="date" id="novo-validade">
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-sec" onclick="closeModal('modal-novo')">Cancelar</button>
+      <button class="btn btn-azul" onclick="salvarCliente()">Gerar licença</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Chave gerada -->
+<div class="overlay" id="modal-chave">
+  <div class="modal">
+    <div class="modal-title">✅ Licença gerada!</div>
+    <div class="modal-sub">Guarde a chave abaixo — ela será necessária para ativar o sistema no cliente.</div>
+    <div class="key-box">
+      <div class="key-val" id="chave-display">—</div>
+      <div class="key-sub" id="chave-empresa-display">—</div>
+    </div>
+    <div class="key-box" style="background:#F5EDD4;border-color:#9A7B1E;margin-top:8px">
+      <div style="font-size:11px;color:#633806;font-weight:700;margin-bottom:4px">SENHA MASTER PROVISÓRIA</div>
+      <div class="key-val" id="master-pwd-display" style="color:#633806;font-size:20px;letter-spacing:.15em">—</div>
+      <div class="key-sub" style="color:#935116">Repassar ao cliente · Troca obrigatória no 1º acesso</div>
+    </div>
+    <div class="note">
+      <strong>Como ativar no cliente:</strong><br>
+      1. Instale o sistema na máquina do cliente<br>
+      2. Na tela de ativação, informe o CNPJ e a chave de licença<br>
+      3. No primeiro acesso ao Admin, use a senha master provisória acima<br>
+      4. O sistema solicitará troca obrigatória da senha
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-sec" onclick="copiarChave()">📋 Copiar chave</button>
+      <button class="btn btn-sec" onclick="copiarTudo()">📋 Copiar tudo</button>
+      <button class="btn btn-azul" onclick="closeModal('modal-chave')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Renovar -->
+<div class="overlay" id="modal-renovar">
+  <div class="modal">
+    <div class="modal-title">Renovar licença</div>
+    <div class="modal-sub" id="renovar-sub">Selecione o novo período de validade.</div>
+    <input type="hidden" id="renovar-chave">
+    <div class="field"><label>Nova data de validade *</label>
+      <input type="date" id="renovar-data">
+    </div>
+    <div class="note">A renovação é aplicada imediatamente. O cliente não precisa reinstalar nada.</div>
+    <div class="modal-btns">
+      <button class="btn btn-sec" onclick="closeModal('modal-renovar')">Cancelar</button>
+      <button class="btn btn-success" onclick="confirmarRenovacao()">✓ Renovar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Confirmar bloqueio -->
+<div class="overlay" id="modal-bloquear">
+  <div class="modal">
+    <div class="modal-title" id="bloquear-title">Bloquear cliente</div>
+    <div class="warn-box" id="bloquear-msg">—</div>
+    <div class="modal-btns">
+      <button class="btn btn-sec" onclick="closeModal('modal-bloquear')">Cancelar</button>
+      <button class="btn btn-danger" id="btn-confirmar-bloq" onclick="confirmarBloqueio()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+// ── Firebase ──
+const firebaseConfig = {
+  apiKey: "AIzaSyDE6MyltEyCDxO6tOZ1QELjH6lPWzmKZIg",
+  authDomain: "timesheet-pro-eb1c0.firebaseapp.com",
+  projectId: "timesheet-pro-eb1c0",
+  storageBucket: "timesheet-pro-eb1c0.firebasestorage.app",
+  messagingSenderId: "851755831663",
+  appId: "1:851755831663:web:e1e4c8f5e7b5b4e034189a"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+const OWNER_EMAIL = 'diogodhs92@gmail.com';
+let clientes = [];
+let bloquearAction = null;
+
+// ── Helpers ──
+const $ = id => document.getElementById(id);
+function setLoading(on) { $('loading').classList.toggle('on', on); }
+function toast(msg, err=false) {
+  const el = $('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (err ? ' err' : '');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+function closeModal(id) { $(id).classList.remove('open'); }
+function openModal(id)  { $(id).classList.add('open'); }
+function pad(n) { return String(n).padStart(2,'0'); }
+
+function maskCNPJ(el) {
+  let v = el.value.replace(/\D/g,'').slice(0,14);
+  if (v.length > 12) v = v.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})$/,'$1.$2.$3/$4-$5');
+  else if (v.length > 8) v = v.replace(/^(\d{2})(\d{3})(\d{3})(\d{0,4})$/,'$1.$2.$3/$4');
+  else if (v.length > 5) v = v.replace(/^(\d{2})(\d{3})(\d{0,3})$/,'$1.$2.$3');
+  else if (v.length > 2) v = v.replace(/^(\d{2})(\d{0,3})$/,'$1.$2');
+  el.value = v;
+}
+
+function gerarSenhaMaster() {
+  const chars  = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  const special= '@#$!';
+  let pwd = '';
+  for (let i = 0; i < 6; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
+  pwd += special[Math.floor(Math.random() * special.length)];
+  pwd += Math.floor(Math.random() * 90 + 10);
+  return pwd;
+}
+
+function gerarChave(cnpj) {
+  const cnpjNum = cnpj.replace(/\D/g,'').slice(0,6);
+  const rand    = Math.random().toString(36).toUpperCase().slice(2,8);
+  const ano     = new Date().getFullYear().toString().slice(2);
+  return `TSP-${cnpjNum}-${rand}-${ano}`;
+}
+
+function validadePadrao() {
+  const d = new Date();
+  d.setDate(d.getDate() + 30);
+  return d.toISOString().slice(0,10);
+}
+
+function statusBadge(cli) {
+  const hoje  = new Date().toISOString().slice(0,10);
+  const diff  = Math.ceil((new Date(cli.validade) - new Date(hoje)) / 86400000);
+  if (!cli.ativo)    return '<span class="badge badge-gray">Bloqueado</span>';
+  if (diff < 0)      return '<span class="badge badge-red">Expirado</span>';
+  if (diff <= 7)     return `<span class="badge badge-warn">Vence em ${diff}d</span>`;
+  return '<span class="badge badge-green">Ativo</span>';
+}
+
+// ── Auth ──
+function doLogin() {
+  const email = $('login-email').value.trim();
+  const pwd   = $('login-pwd').value;
+  if (!email || !pwd) return;
+  $('btn-login').disabled = true;
+  $('login-err').style.display = 'none';
+  setLoading(true);
+  auth.signInWithEmailAndPassword(email, pwd)
+    .catch(e => {
+      $('login-err').style.display = 'block';
+      $('btn-login').disabled = false;
+      setLoading(false);
+    });
+}
+
+function doLogout() {
+  auth.signOut();
+}
+
+auth.onAuthStateChanged(user => {
+  setLoading(false);
+  if (user && user.email === OWNER_EMAIL) {
+    $('login-screen').style.display = 'none';
+    $('app').style.display = 'block';
+    $('topbar-email').textContent = user.email;
+    iniciarPainel();
+  } else if (user) {
+    auth.signOut();
+    $('login-err').textContent = 'Acesso não autorizado para este e-mail.';
+    $('login-err').style.display = 'block';
+  } else {
+    $('login-screen').style.display = 'flex';
+    $('app').style.display = 'none';
+  }
+});
+
+// ── Painel ──
+function iniciarPainel() {
+  db.collection('licencas').onSnapshot(snap => {
+    clientes = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a,b) => a.empresa.localeCompare(b.empresa));
+    renderClientes();
+    atualizarStats();
+  });
+}
+
+function atualizarStats() {
+  const hoje  = new Date().toISOString().slice(0,10);
+  const em7   = new Date(); em7.setDate(em7.getDate()+7); const em7str = em7.toISOString().slice(0,10);
+  $('s-total').textContent     = clientes.length;
+  $('s-ativos').textContent    = clientes.filter(c => c.ativo && c.validade >= hoje).length;
+  $('s-vencendo').textContent  = clientes.filter(c => c.ativo && c.validade >= hoje && c.validade <= em7str).length;
+  $('s-expirados').textContent = clientes.filter(c => !c.ativo || c.validade < hoje).length;
+}
+
+function renderClientes() {
+  const q    = $('search-cli').value.toLowerCase();
+  const list = clientes.filter(c =>
+    !q || c.empresa.toLowerCase().includes(q) ||
+    c.cnpj.includes(q) || (c.contato||'').toLowerCase().includes(q)
+  );
+  const tbody = $('tbody-clientes');
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:32px">Nenhum cliente encontrado.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(cli => `
+    <tr>
+      <td><strong>${cli.empresa}</strong>${cli.email?`<br><span style="font-size:11px;color:var(--text2)">${cli.email}</span>`:''}</td>
+      <td style="font-family:monospace;font-size:12px">${cli.cnpj}</td>
+      <td>${cli.contato||'—'}${cli.tel?`<br><span style="font-size:11px;color:var(--text2)">${cli.tel}</span>`:''}</td>
+      <td><span style="font-family:monospace;font-size:11px;font-weight:700;color:var(--azul);background:var(--surface);padding:3px 8px;border-radius:5px;cursor:pointer" onclick="copiarTexto('${cli.chave}')" title="Clique para copiar">${cli.chave}</span></td>
+      <td>${cli.validade ? new Date(cli.validade+'T00:00:00').toLocaleDateString('pt-BR') : '—'}</td>
+      <td>${statusBadge(cli)}</td>
+      <td>
+        <div style="display:flex;gap:5px;flex-wrap:wrap">
+          <button class="btn btn-success btn-sm" onclick="openRenovar('${cli.chave}','${cli.empresa}','${cli.validade}')">Renovar</button>
+          <button class="btn btn-sec btn-sm" onclick="openEditar('${cli.chave}')">Editar</button>
+          ${cli.ativo
+            ? `<button class="btn btn-danger btn-sm" onclick="openBloquear('${cli.chave}','${cli.empresa}',false)">Bloquear</button>`
+            : `<button class="btn btn-warn btn-sm" onclick="openBloquear('${cli.chave}','${cli.empresa}',true)">Reativar</button>`
+          }
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+// ── Novo cliente ──
+function openNovoCliente() {
+  $('modal-novo-title').textContent = 'Novo cliente';
+  $('edit-chave').value = '';
+  ['novo-empresa','novo-cnpj','novo-tel','novo-contato','novo-email'].forEach(id => $(id).value = '');
+  $('novo-validade').value = validadePadrao();
+  openModal('modal-novo');
+  setTimeout(() => $('novo-empresa').focus(), 100);
+}
+
+function openEditar(chave) {
+  const cli = clientes.find(c => c.chave === chave);
+  if (!cli) return;
+  $('modal-novo-title').textContent = 'Editar cliente';
+  $('edit-chave').value    = chave;
+  $('novo-empresa').value  = cli.empresa;
+  $('novo-cnpj').value     = cli.cnpj;
+  $('novo-tel').value      = cli.tel || '';
+  $('novo-contato').value  = cli.contato || '';
+  $('novo-email').value    = cli.email || '';
+  $('novo-validade').value = cli.validade;
+  openModal('modal-novo');
+}
+
+async function salvarCliente() {
+  const empresa  = $('novo-empresa').value.trim();
+  const cnpj     = $('novo-cnpj').value.trim();
+  const validade = $('novo-validade').value;
+  const editChave= $('edit-chave').value;
+
+  if (!empresa) { alert('Informe o nome da empresa.'); return; }
+  if (!cnpj || cnpj.replace(/\D/g,'').length < 14) { alert('Informe um CNPJ válido com 14 dígitos.'); return; }
+  if (!validade) { alert('Informe a data de validade.'); return; }
+
+  setLoading(true);
+  try {
+    if (editChave) {
+      // Editar existente
+      await db.collection('licencas').doc(editChave).update({
+        empresa, cnpj,
+        tel:      $('novo-tel').value.trim(),
+        contato:  $('novo-contato').value.trim(),
+        email:    $('novo-email').value.trim(),
+        validade,
+        atualizadoEm: new Date().toISOString()
+      });
+      closeModal('modal-novo');
+      toast('Cliente atualizado!');
+    } else {
+      // Novo cliente
+      const chave = gerarChave(cnpj);
+      const masterPwd = gerarSenhaMaster();
+      await db.collection('licencas').doc(chave).set({
+        chave, empresa, cnpj,
+        tel:          $('novo-tel').value.trim(),
+        contato:      $('novo-contato').value.trim(),
+        email:        $('novo-email').value.trim(),
+        validade, ativo: true,
+        criadoEm:     new Date().toISOString(),
+        ultimoAcesso: null,
+        masterPwdProvisoria: masterPwd
+      });
+      // Salva senha master no tenant do cliente
+      await db.collection('tenants').doc(chave).collection('config').doc('master').set({
+        masterPwd, admins: [],
+        updatedAt:  new Date().toISOString(),
+        provisoria: true
+      });
+      closeModal('modal-novo');
+      $('chave-display').textContent         = chave;
+      $('chave-empresa-display').textContent = empresa + ' · ' + cnpj;
+      $('master-pwd-display').textContent    = masterPwd;
+      openModal('modal-chave');
+    }
+  } catch(e) { toast('Erro ao salvar: ' + e.message, true); console.error(e); }
+  setLoading(false);
+}
+
+// ── Renovar ──
+function openRenovar(chave, empresa, validadeAtual) {
+  $('renovar-chave').value = chave;
+  $('renovar-sub').textContent = `Renovando licença de ${empresa}. Validade atual: ${validadeAtual ? new Date(validadeAtual+'T00:00:00').toLocaleDateString('pt-BR') : '—'}`;
+  // Sugere +30 dias a partir de hoje ou da validade atual
+  const base = validadeAtual && validadeAtual > new Date().toISOString().slice(0,10) ? new Date(validadeAtual+'T00:00:00') : new Date();
+  base.setDate(base.getDate() + 30);
+  $('renovar-data').value = base.toISOString().slice(0,10);
+  openModal('modal-renovar');
+}
+
+async function confirmarRenovacao() {
+  const chave   = $('renovar-chave').value;
+  const validade= $('renovar-data').value;
+  if (!validade) { alert('Informe a nova data.'); return; }
+  setLoading(true);
+  try {
+    await db.collection('licencas').doc(chave).update({ validade, ativo: true, atualizadoEm: new Date().toISOString() });
+    closeModal('modal-renovar');
+    toast('Licença renovada com sucesso!');
+  } catch(e) { toast('Erro: ' + e.message, true); }
+  setLoading(false);
+}
+
+// ── Bloquear / Reativar ──
+function openBloquear(chave, empresa, reativar) {
+  $('bloquear-title').textContent = reativar ? 'Reativar cliente' : 'Bloquear cliente';
+  $('bloquear-msg').textContent   = reativar
+    ? `Reativar o acesso de "${empresa}"? O sistema voltará a funcionar normalmente.`
+    : `Bloquear o acesso de "${empresa}"? O sistema mostrará tela de licença expirada até você reativar.`;
+  $('btn-confirmar-bloq').textContent = reativar ? 'Reativar' : 'Bloquear';
+  $('btn-confirmar-bloq').className   = reativar ? 'btn btn-success' : 'btn btn-danger';
+  bloquearAction = { chave, reativar };
+  openModal('modal-bloquear');
+}
+
+async function confirmarBloqueio() {
+  if (!bloquearAction) return;
+  setLoading(true);
+  try {
+    await db.collection('licencas').doc(bloquearAction.chave).update({
+      ativo: bloquearAction.reativar,
+      atualizadoEm: new Date().toISOString()
+    });
+    closeModal('modal-bloquear');
+    toast(bloquearAction.reativar ? 'Cliente reativado!' : 'Cliente bloqueado.');
+    bloquearAction = null;
+  } catch(e) { toast('Erro: ' + e.message, true); }
+  setLoading(false);
+}
+
+// ── Utilitários ──
+function copiarTexto(txt) {
+  navigator.clipboard.writeText(txt).then(() => toast('Copiado!'));
+}
+function copiarChave() { copiarTexto($('chave-display').textContent); }
+function copiarTudo() {
+  const txt = 'Empresa: ' + $('chave-empresa-display').textContent +
+    '\nChave: ' + $('chave-display').textContent +
+    '\nSenha Master: ' + $('master-pwd-display').textContent;
+  copiarTexto(txt);
+}
+</script>
+</body>
+</html>
