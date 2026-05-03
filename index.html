@@ -212,14 +212,21 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--surface);color
       <div class="key-val" id="chave-display">—</div>
       <div class="key-sub" id="chave-empresa-display">—</div>
     </div>
+    <div class="key-box" style="background:#F5EDD4;border-color:#9A7B1E;margin-top:8px">
+      <div style="font-size:11px;color:#633806;font-weight:700;margin-bottom:4px">SENHA MASTER PROVISÓRIA</div>
+      <div class="key-val" id="master-pwd-display" style="color:#633806;font-size:20px;letter-spacing:.15em">—</div>
+      <div class="key-sub" style="color:#935116">Repassar ao cliente · Troca obrigatória no 1º acesso</div>
+    </div>
     <div class="note">
       <strong>Como ativar no cliente:</strong><br>
       1. Instale o sistema na máquina do cliente<br>
-      2. Na tela de ativação, informe o CNPJ e esta chave<br>
-      3. O sistema conectará automaticamente ao banco de dados isolado deste cliente
+      2. Na tela de ativação, informe o CNPJ e a chave de licença<br>
+      3. No primeiro acesso ao Admin, use a senha master provisória acima<br>
+      4. O sistema solicitará troca obrigatória da senha
     </div>
     <div class="modal-btns">
       <button class="btn btn-sec" onclick="copiarChave()">📋 Copiar chave</button>
+      <button class="btn btn-sec" onclick="copiarTudo()">📋 Copiar tudo</button>
       <button class="btn btn-azul" onclick="closeModal('modal-chave')">Fechar</button>
     </div>
   </div>
@@ -297,6 +304,16 @@ function maskCNPJ(el) {
   else if (v.length > 5) v = v.replace(/^(\d{2})(\d{3})(\d{0,3})$/,'$1.$2.$3');
   else if (v.length > 2) v = v.replace(/^(\d{2})(\d{0,3})$/,'$1.$2');
   el.value = v;
+}
+
+function gerarSenhaMaster() {
+  const chars  = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  const special= '@#$!';
+  let pwd = '';
+  for (let i = 0; i < 6; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
+  pwd += special[Math.floor(Math.random() * special.length)];
+  pwd += Math.floor(Math.random() * 90 + 10);
+  return pwd;
 }
 
 function gerarChave(cnpj) {
@@ -460,22 +477,27 @@ async function salvarCliente() {
     } else {
       // Novo cliente
       const chave = gerarChave(cnpj);
+      const masterPwd = gerarSenhaMaster();
       await db.collection('licencas').doc(chave).set({
-        chave,
-        empresa,
-        cnpj,
-        tel:       $('novo-tel').value.trim(),
-        contato:   $('novo-contato').value.trim(),
-        email:     $('novo-email').value.trim(),
-        validade,
-        ativo:     true,
-        criadoEm:  new Date().toISOString(),
-        ultimoAcesso: null
+        chave, empresa, cnpj,
+        tel:          $('novo-tel').value.trim(),
+        contato:      $('novo-contato').value.trim(),
+        email:        $('novo-email').value.trim(),
+        validade, ativo: true,
+        criadoEm:     new Date().toISOString(),
+        ultimoAcesso: null,
+        masterPwdProvisoria: masterPwd
+      });
+      // Salva senha master no tenant do cliente
+      await db.collection('tenants').doc(chave).collection('config').doc('master').set({
+        masterPwd, admins: [],
+        updatedAt:  new Date().toISOString(),
+        provisoria: true
       });
       closeModal('modal-novo');
-      // Mostra a chave gerada
       $('chave-display').textContent         = chave;
       $('chave-empresa-display').textContent = empresa + ' · ' + cnpj;
+      $('master-pwd-display').textContent    = masterPwd;
       openModal('modal-chave');
     }
   } catch(e) { toast('Erro ao salvar: ' + e.message, true); console.error(e); }
@@ -537,8 +559,14 @@ async function confirmarBloqueio() {
 function copiarTexto(txt) {
   navigator.clipboard.writeText(txt).then(() => toast('Copiado!'));
 }
-function copiarChave() {
-  copiarTexto($('chave-display').textContent);
+function copiarChave() { copiarTexto($('chave-display').textContent); }
+function copiarTudo() {
+  const txt = 'Empresa: ' + $('chave-empresa-display').textContent +
+    '
+Chave: ' + $('chave-display').textContent +
+    '
+Senha Master: ' + $('master-pwd-display').textContent;
+  copiarTexto(txt);
 }
 </script>
 </body>
